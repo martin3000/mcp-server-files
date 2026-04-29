@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_files",
+        "--allowed-dir",
+        "/home/jms/Documents",
+        "--allowed-dir",
+        "/home/jms/develop"
+      ]
+    },
+    "fetch": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_fetch",
+        "--ignore-robots-txt"
+      ]
+    }
+  }
+}

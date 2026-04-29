@@ -19,7 +19,12 @@ def main():
     )
 
     args = parser.parse_args()
-    asyncio.run(serve(args.allowed_dirs))
+    try:
+        asyncio.run(serve(args.allowed_dirs))
+    except ValueError as e:
+        import sys
+        print(f"Fehler: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
