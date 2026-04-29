@@ -30,6 +30,8 @@ def _check_path(path: str, allowed_dirs: list[Path]) -> Path:
     ))
 
 
+MAX_DIR_ENTRIES = 200
+
 class ListDirectory(BaseModel):
     path: Annotated[str, Field(description="Directory path to list")]
 
@@ -135,8 +137,13 @@ async def serve(allowed_dirs: list[str] | None = None) -> None:
                 raise McpError(ErrorData(code=INVALID_PARAMS, message=f"Kein Verzeichnis: {path}"))
 
             entries = []
+            truncated = False
             try:
-                for entry in sorted(path.iterdir(), key=lambda e: (e.is_file(), e.name.lower())):
+                all_entries = sorted(path.iterdir(), key=lambda e: (e.is_file(), e.name.lower()))
+                if len(all_entries) > MAX_DIR_ENTRIES:
+                    truncated = True
+                    all_entries = all_entries[:MAX_DIR_ENTRIES]
+                for entry in all_entries:
                     if entry.is_dir():
                         entries.append(f"[DIR]  {entry.name}/")
                     else:
@@ -144,7 +151,10 @@ async def serve(allowed_dirs: list[str] | None = None) -> None:
             except PermissionError as e:
                 raise McpError(ErrorData(code=INTERNAL_ERROR, message=f"Zugriff verweigert: {e}"))
 
-            text = f"Inhalt von '{path}':\n" + ("\n".join(entries) if entries else "(leer)")
+            body = "\n".join(entries) if entries else "(leer)"
+            if truncated:
+                body += f"\n\n(Ausgabe auf {MAX_DIR_ENTRIES} Einträge begrenzt.)"
+            text = f"Inhalt von '{path}':\n" + body
             return [TextContent(type="text", text=text)]
 
         elif name == "read_file":
